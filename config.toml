@@ -5,3 +5,4 @@ command = ["echo", "test2"]
 [[Commands]]
 name = "pacman"
 command = ["/home/david/scripts/updates.sh"]
+delay = 100

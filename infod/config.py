@@ -7,6 +7,7 @@ from typing import Iterable
 class CommandSpec:
     name: str
     command: Iterable[str]
+    delay: int = 10
 
 @dataclass
 class InfodConfig:

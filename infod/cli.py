@@ -14,8 +14,8 @@ from infod.config import InfodConfig, CommandSpec
 
 app = typer.Typer()
 
-data_home = xdg_data_home() / Path('InfoFs/mnt')
-config_home = xdg_config_home() / Path('InfoFs/config.toml')
+data_home = xdg_data_home() / Path('infod/mnt')
+config_home = xdg_config_home() / Path('infod/config.toml')
 
 @app.command()
 def serve(mountpoint: Path = data_home, config: Path = config_home, debug: bool = False, debug_fuse: bool = False):

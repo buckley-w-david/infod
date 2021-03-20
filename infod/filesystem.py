@@ -28,6 +28,7 @@ class InfoFs(pyfuse3.Operations):
     def __init__(self, infod_config):
         self.mountpoint = infod_config.mountpoint
         self.debug = infod_config.debug_fuse
+        self.commands = infod_config.commands
         self.info_files = [
             InfoFile(
                 name=bytes(spec.name, 'utf-8'),
@@ -100,13 +101,13 @@ class InfoFs(pyfuse3.Operations):
             data = b''
         return data[off:off+size]
 
-    async def _scheduler(self, nursery):
-        for info_file in self.info_files:
-            process = await trio.run_process(info_file.command, capture_stdout=True)
-            info_file.content = process.stdout
+    async def _scheduler(self, name, command, delay, nursery):
+        process = await trio.run_process(command, capture_stdout=True)
+        info_file = self.files_by_name[name]
+        info_file.content = process.stdout
 
-        await trio.sleep(10)
-        nursery.start_soon(self._scheduler, nursery) # async infinite loop?
+        await trio.sleep(delay)
+        nursery.start_soon(self._scheduler, name, command, delay, nursery)
 
     async def _go(self):
         fuse_options = set(pyfuse3.default_options)
@@ -118,7 +119,14 @@ class InfoFs(pyfuse3.Operations):
         try:
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(pyfuse3.main)
-                nursery.start_soon(self._scheduler, nursery)
+                for command_spec in self.commands:
+                    nursery.start_soon(
+                        self._scheduler,
+                        bytes(command_spec.name, 'utf-8'),
+                        command_spec.command,
+                        command_spec.delay,
+                        nursery
+                    )
         except:
             raise
         finally:
