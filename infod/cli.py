@@ -1,5 +1,6 @@
 from pathlib import Path
 import subprocess
+import typing
 
 import toml
 import typer
@@ -19,15 +20,17 @@ default_mount = xdg_data_home() / Path('infod/mnt')
 default_config = xdg_config_home() / Path('infod/config.toml')
 
 @app.command()
-def serve(mountpoint: Path = default_mount, config: Path = default_config, debug: bool = False, debug_fuse: bool = False):
+def serve(config: Path = default_config, mountpoint: typing.Optional[Path] = typer.Argument(None), debug: bool = False, debug_fuse: bool = False):
+    config = toml.load(config)
+    if not mountpoint:
+        mountpoint = Path(config.get('mountpoint', default_mount))
+    mountpoint.mkdir(parents=True, exist_ok=True)
+
     try:
         clean(mountpoint)
     except:
         pass
 
-    mountpoint.mkdir(parents=True, exist_ok=True)
-
-    config = toml.load(config)
     infod_config = InfodConfig(
         mountpoint=mountpoint,
         commands=[CommandSpec(**command) for command in config[ 'Commands' ]],

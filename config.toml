@@ -1,3 +1,5 @@
+mountpoint = "/home/david/.local/share/infod/mnt"
+
 [[Commands]]
 name = "echo"
 command = ["echo", "test2"]
