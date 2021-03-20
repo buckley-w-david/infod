@@ -1,4 +1,5 @@
 from pathlib import Path
+import subprocess
 
 import toml
 import typer
@@ -14,12 +15,17 @@ from infod.config import InfodConfig, CommandSpec
 
 app = typer.Typer()
 
-data_home = xdg_data_home() / Path('infod/mnt')
-config_home = xdg_config_home() / Path('infod/config.toml')
+default_mount = xdg_data_home() / Path('infod/mnt')
+default_config = xdg_config_home() / Path('infod/config.toml')
 
 @app.command()
-def serve(mountpoint: Path = data_home, config: Path = config_home, debug: bool = False, debug_fuse: bool = False):
-    mountpoint.mkdir(exist_ok=True)
+def serve(mountpoint: Path = default_mount, config: Path = default_config, debug: bool = False, debug_fuse: bool = False):
+    try:
+        clean(mountpoint)
+    except:
+        pass
+
+    mountpoint.mkdir(parents=True, exist_ok=True)
 
     config = toml.load(config)
     infod_config = InfodConfig(
@@ -32,6 +38,10 @@ def serve(mountpoint: Path = data_home, config: Path = config_home, debug: bool 
     logging.init_logging(infod_config.debug_log)
     info_filesystem = InfoFs(infod_config)
     info_filesystem.serve()
+
+@app.command()
+def clean(mountpoint: Path = default_mount):
+    subprocess.run(['fusermount', '-u', mountpoint])
 
 if __name__ == '__main__':
     app()
