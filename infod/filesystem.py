@@ -21,7 +21,6 @@ import typing
 class InfoFile:
     name: bytes
     content: bytes
-    command: typing.Iterable[str]
     inode: int
 
 class InfoFs(pyfuse3.Operations):
@@ -33,7 +32,6 @@ class InfoFs(pyfuse3.Operations):
             InfoFile(
                 name=bytes(spec.name, 'utf-8'),
                 content=b'',
-                command=spec.command,
                 inode=pyfuse3.ROOT_INODE+1+i
             ) for (i, spec) in enumerate(infod_config.commands)
         ]
